@@ -8,9 +8,11 @@
 #       https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip
 #
 # This script answers the following question:
-# 
-
-setwd("/Users/bill/Desktop/class/exploratory data/proj2")
+#	Have total emissions from PM2.5 decreased in the United States
+#	from 1999 to 2008? Using the base plotting system, make a plot
+#	showing the total PM2.5 emission from all sources for each of the
+#	years 1999, 2002, 2005, and 2008.
+#
 
 # Download the zip file and uncompress it giving the 2 source files.
 
@@ -35,10 +37,9 @@ if ((!file.exists(dataFileSrcSCC)) | (!file.exists(dataFileSrcSUM))) {
                 stop(paste("Could not unzip data zip file <", dataFileZip,
 			   "> to data files <", dataFileSrcSCC, "> and ",
 			   dataFileSrcSUM, ">.", sep = ""))
-        }
+	}
+        print("Data Files Successfully loaded.")
 }
-
-print("Files loaded.")
 
 # Extract the data from the data file.
 print("Reading Source Files")
@@ -46,14 +47,45 @@ print("Reading Source Files")
 NEI <- readRDS(dataFileSrcSUM)
 SCC <- readRDS(dataFileSrcSCC)
 
-print("Reading Source Files Complete")
+print("Creating Plot")
 
 # Create the chart
 
 # first open the png device.
 png(dataFileOut, width = 480, height = 480)
 
-# Plot the Data chart
+# Find the Emissions over each year of data
+
+aggdata <- aggregate(Emissions ~ year, NEI, sum,
+                     na.rm = TRUE, na.action="na.pass")
+
+# convert to Millions of Tons
+aggdata$Emissions <- aggdata$Emissions / 10^6
+
+# Plot the data. Fiddle with the axis scales to make the plot look nicer
+plot(aggdata,
+     main = "Total PM2.5 Emmissions in the US over Time",
+     xlab = "Year",
+     ylab = "Emissions (in Mil Tons)",
+     pch = 19,
+     type = "p",
+     xlim = c(min(aggdata$year, na.rm = TRUE),
+              max(aggdata$year, na.rm = TRUE) + 1),
+     ylim = c(0, max(aggdata$Emissions, na.rm=TRUE) + 1),
+     xaxt = "n"
+     )
+
+# only slow the years we are plotting on the x axis
+axis(side = 1, at = aggdata$year)
+
+# add a regression line
+abline(lm(aggdata$Emissions ~ aggdata$year), col = "red")
+
+# add data point labels
+datlab <- round(aggdata$Emissions, digits = 2)
+text(aggdata$year, aggdata$Emissions, datlab, pos=4, cex = .7)
 
 # Close the device
 dev.off()
+
+print("Complete")
