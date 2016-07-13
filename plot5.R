@@ -1,5 +1,5 @@
 #
-# plot4.R script
+# plot5.R script
 #
 # This script performs an exploratory data analysis for the second
 # class project.
@@ -8,9 +8,9 @@
 #       https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip
 #
 # This script answers the following question:
-#       Across the United States, how have emissions from coal
-#       combustion-related sources changed from 1999–2008?
-
+#       How have emissions from motor vehicle sources changed from
+#	1999–2008 in Baltimore City?
+#
 
 # Download the zip file and uncompress it giving the 2 source files.
 
@@ -18,7 +18,7 @@ dataFileURL <- "https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.z
 dataFileZip <- "NEI_data.zip"
 dataFileSrcSCC <- "Source_Classification_Code.rds"
 dataFileSrcSUM <- "summarySCC_PM25.rds"
-dataFileOut <- "plot4.png"
+dataFileOut <- "plot5.png"
 
 if ((!file.exists(dataFileSrcSCC)) | (!file.exists(dataFileSrcSUM))) {
         if (!file.exists(dataFileZip)) {
@@ -48,10 +48,10 @@ SCC <- readRDS(dataFileSrcSCC)
 print("Analyzing the Data")
 
 # finding the SCC values from Coal Sources
-SCC <- SCC[grepl("coal", SCC$EI.Sector, ignore.case=TRUE), c("SCC", "EI.Sector")]
+SCC <- SCC[grepl("Vehicles", SCC$EI.Sector, ignore.case=TRUE), c("SCC", "EI.Sector")]
 
-# pulling those emissions values that are from Coal sources
-NEI <- NEI[NEI$SCC %in% SCC$SCC,]
+# pulling those Baltimore City emissions values that are from Motor Vehicle sources
+NEI <- NEI[(NEI$SCC %in% SCC$SCC) & (NEI$fips == "24510"),]
 
 print("Creating Plot")
 
@@ -65,14 +65,11 @@ png(dataFileOut, width = 480, height = 480)
 aggdata <- aggregate(Emissions ~ year, NEI, sum,
                      na.rm = TRUE, na.action="na.pass")
 
-# convert to Millions of Tons
-aggdata$Emissions <- aggdata$Emissions / 10^6
-
 # Plot the data. Fiddle with the axis scales to make the plot look nicer
 plot(aggdata,
-     main = "Total PM2.5 Emmissions from Coal Sources in the US over Time",
+     main = "Total PM2.5 Emmissions from Vehicle Sources in the Baltimore City, MD over Time",
      xlab = "Year",
-     ylab = "Emissions (in Mil Tons)",
+     ylab = "Emissions (in Tons)",
      pch = 19,
      type = "p",
      xlim = c(min(aggdata$year, na.rm = TRUE),
